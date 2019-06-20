@@ -19,6 +19,7 @@ class Chrona(BenCogsBot):
 		'ben_cogs.debug',
 		'ben_cogs.stats',
 		'ben_cogs.sql',
+		'cogs.meta',
 	)
 
 	async def init_db(self):
