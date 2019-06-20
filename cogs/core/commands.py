@@ -1,3 +1,5 @@
+import asyncio
+import collections
 import contextlib
 import datetime
 import os.path
@@ -12,19 +14,27 @@ from utils.time import human_timedelta, ShortTime
 class DisappearingMessages(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
-		self.timer_db = bot.cogs['TimerDispatcher']
+		self.timers = bot.cogs['TimerDispatcher']
 		self.db = bot.cogs['DisappearingMessagesDatabase']
+		self.to_keep_lock = asyncio.Lock()
+		self.to_keep = set()
 
 	@commands.Cog.listener()
 	async def on_message(self, message):
 		if not message.guild:
 			return
+
+		async with self.to_keep_lock:
+			if message.id in self.to_keep:
+				self.to_keep.remove(message.id)
+				return
+
 		expiry = await self.db.get_expiry(message.channel)
 		if expiry is None:
 			return
 
 		expires = datetime.datetime.utcnow() + expiry
-		timer = await self.timer_db.create_timer(
+		timer = await self.timers.create_timer(
 			'message_expiration',
 			expires,
 			channel_id=message.channel.id,
@@ -46,14 +56,22 @@ class DisappearingMessages(commands.Cog):
 			await ctx.send(
 				f'The current disappearing message timer for {pronoun} channel is {human_timedelta(expiry)}.')
 
-	@timer.command(name='set', usage='<timer>')
+	@timer.command(name='set', usage='<time interval>')
 	async def set_timer(self, ctx, channel: typing.Optional[discord.TextChannel] = None, *, expiry: ShortTime):
+		# XXX i think this may not always preserve the invoking message
+		# as self.on_message may have gotten to it first
+		# however, in my experience, this does work
+		async with self.to_keep_lock:
+			self.to_keep.add(ctx.message.id)
+
 		channel = channel or ctx.channel
 		await self.db.set_expiry(channel, expiry)
 		pronoun = 'this' if channel == ctx.channel else 'that'
-		await ctx.send(
-			f'{self.bot.config["success_emojis"][True]} New disappearing message timer for {pronoun} channel: '
-			f'{human_timedelta(expiry)}.')
+		async with self.to_keep_lock:
+			m = await ctx.send(
+				f'{self.bot.config["success_emojis"][True]} New disappearing message timer for {pronoun} channel: '
+				f'{human_timedelta(expiry)}.')
+			self.to_keep.add(m.id)
 
 	@commands.Cog.listener()
 	async def on_message_expiration_timer_complete(self, timer):
