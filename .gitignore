@@ -1,4 +1,4 @@
-config.json5
+config.py
 __pycache__/
 .venv/
 venv/

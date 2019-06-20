@@ -2,7 +2,6 @@
 
 import asyncpg
 from ben_cogs import BenCogsBot
-import json5
 
 import utils
 
@@ -27,7 +26,7 @@ class Chrona(BenCogsBot):
 		self.pool = await asyncpg.create_pool(**credentials, init=utils.asyncpg_set_json_codec)
 
 if __name__ == '__main__':
-	with open('config.json5') as f:
-		config = json5.load(f)
+	with open('config.py') as f:
+		config = eval(f.read(), {})
 
 	Chrona(config=config).run()
