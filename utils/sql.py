@@ -32,8 +32,8 @@ def load_sql(fp):
 	return queries
 
 _connection = aiocontextvars.ContextVar('connection')
-# optimize this getattr so it's cleaner and faster
-connection = lambda _get_connection=_connection.get: _get_connection()
+# make the interface a bit cleaner
+connection = lambda: _connection.get()
 connection.set = _connection.set
 
 def optional_connection(func):
