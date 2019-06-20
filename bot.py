@@ -11,12 +11,14 @@ class Chrona(BenCogsBot):
 		super().__init__(*args, **kwargs, setup_db=True)
 
 	startup_extensions = (
-		'cogs.timers',
-#		'cogs.core',
+		'cogs.timers.db',
+		'cogs.timers.dispatching',
+		'cogs.core.db',
+		'cogs.core.commands',
 		'jishaku',
 		'ben_cogs.misc',
 		'ben_cogs.debug',
-#		'ben_cogs.stats',
+		'ben_cogs.stats',
 		'ben_cogs.sql',
 	)
 

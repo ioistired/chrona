@@ -1,4 +1,9 @@
+import asyncpg
+import inspect
 import re
+
+import aiocontextvars
+from async_exit_stack import AsyncExitStack
 
 from . import attrdict
 
@@ -25,3 +30,34 @@ def load_sql(fp):
 		queries[tag] = ''.join(query)
 
 	return queries
+
+_connection = aiocontextvars.ContextVar('connection')
+# optimize this getattr so it's cleaner and faster
+connection = lambda _get_connection=_connection.get: _get_connection()
+connection.set = _connection.set
+
+def optional_connection(func):
+	"""Decorator that acquires a connection for the decorated function if the contextvar is not set."""
+	async def get_conn(self):
+		stack = AsyncExitStack()
+
+		try:
+			# allow someone to call a decorated function twice within the same Task
+			# the second time, a new connection will be acquired
+			connection().is_closed()
+		except (asyncpg.InterfaceError, LookupError):
+			connection.set(await stack.enter_async_context(self.bot.pool.acquire()))
+
+		return stack
+
+	if inspect.isasyncgenfunction(func):
+		async def inner(self, *args, **kwargs):
+			async with await get_conn(self):
+				async for x in func(self, *args, **kwargs):
+					yield x
+	else:
+		async def inner(self, *args, **kwargs):
+			async with await get_conn(self):
+				return await func(self, *args, **kwargs)
+
+	return inner
