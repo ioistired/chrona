@@ -53,7 +53,8 @@ class DisappearingMessages(commands.Cog):
 	@commands.Cog.listener()
 	async def on_message_expiration_timer_complete(self, timer):
 		channel_id, message_id = map(timer.kwargs.get, ('channel_id', 'message_id'))
-		await self.bot.http.delete_message(channel_id, message_id)
+		with contextlib.suppress(discord.HTTPException):
+			await self.bot.http.delete_message(channel_id, message_id)
 
 def setup(bot):
 	bot.add_cog(DisappearingMessages(bot))
