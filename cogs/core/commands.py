@@ -42,7 +42,7 @@ class DisappearingMessages(commands.Cog):
 			await ctx.send(f'The current expiry for this channel is {human_timedelta(expiry)}.')
 
 	@expiry.command(name='set')
-	async def set_expiry(self, ctx, expiry: ShortTime):
+	async def set_expiry(self, ctx, *, expiry: ShortTime):
 		await self.db.set_expiry(ctx.channel, expiry)
 		await ctx.send(
 			f'{self.bot.config["success_emojis"][True]} New expiry for this channel: {human_timedelta(expiry)}.')
