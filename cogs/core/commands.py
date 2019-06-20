@@ -1,6 +1,7 @@
 import contextlib
 import datetime
 import os.path
+import typing
 
 import discord
 from discord.ext import commands
@@ -41,13 +42,17 @@ class DisappearingMessages(commands.Cog):
 		if expiry is None:
 			await ctx.send(f'This channel does not have disappearing messages set up.')
 		else:
-			await ctx.send(f'The current disappearing message timer for this channel is {human_timedelta(expiry)}.')
+			pronoun = 'this' if channel == ctx.channel else 'that'
+			await ctx.send(
+				f'The current disappearing message timer for {pronoun} channel is {human_timedelta(expiry)}.')
 
 	@timer.command(name='set', usage='<timer>')
-	async def set_timer(self, ctx, *, expiry: ShortTime):
-		await self.db.set_expiry(ctx.channel, expiry)
+	async def set_timer(self, ctx, channel: typing.Optional[discord.TextChannel] = None, *, expiry: ShortTime):
+		channel = channel or ctx.channel
+		await self.db.set_expiry(channel, expiry)
+		pronoun = 'this' if channel == ctx.channel else 'that'
 		await ctx.send(
-			f'{self.bot.config["success_emojis"][True]} New disappearing message timer for this channel: '
+			f'{self.bot.config["success_emojis"][True]} New disappearing message timer for {pronoun} channel: '
 			f'{human_timedelta(expiry)}.')
 
 	@commands.Cog.listener()
