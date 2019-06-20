@@ -26,5 +26,5 @@ class ShortTime(commands.Converter):
 		data = {k: int(v) for k, v in match.groupdict(default=0).items()}
 		return datetime.timedelta(**data)
 
-def human_timedelta(delta):
-	return natural_time(delta.total_seconds())
+def human_timedelta(delta, *, accuracy=2):
+	return natural_time(delta.total_seconds(), accuracy=accuracy)
