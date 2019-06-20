@@ -1,0 +1,5 @@
+config.json5
+__pycache__/
+.venv/
+venv/
+copyright-notice.txt

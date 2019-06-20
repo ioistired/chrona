@@ -1,0 +1,20 @@
+{
+	// @mentions will always work
+	prefixes = [],
+
+	database: {
+		// possible values documented here:
+		// https://magicstack.github.io/asyncpg/current/api/index.html#asyncpg.connection.connect
+	},
+
+	tokens: {
+		discord: '',
+		stats: {
+			'discord.bots.gg': null,
+			'discordbots.org': null,
+			'lbots.org': null,
+		},
+	},
+
+	success_emojis: {false: '❌', true: '✅'},
+}
