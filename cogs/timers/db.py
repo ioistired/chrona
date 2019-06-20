@@ -31,7 +31,7 @@ class Timer:
 
 		delta = (self.expires - now).total_seconds()
 		while delta > ASYNCIO_MAX_SLEEP:
-			await asyncio.sleep(ASYNCIO.MAX_SLEEP)
+			await asyncio.sleep(ASYNCIO_MAX_SLEEP)
 			delta -= ASYNCIO_MAX_SLEEP
 		await asyncio.sleep(delta)
 
