@@ -8,6 +8,7 @@ import typing
 import discord
 from discord.ext import commands
 
+from utils.converter import MessageId
 from utils.sql import load_sql
 from utils.time import human_timedelta, ShortTime
 
@@ -43,7 +44,7 @@ class DisappearingMessages(commands.Cog):
 	@commands.group(invoke_without_command=True)
 	@commands.has_permissions(manage_messages=True)
 	async def timer(self, ctx, channel: discord.TextChannel = None):
-		"""Get the current diseapparing message timer for this channel or another"""
+		"""Get the current disappearing message timer for this channel or another"""
 		if ctx.invoked_subcommand is not None:
 			return
 
@@ -72,6 +73,17 @@ class DisappearingMessages(commands.Cog):
 				f'{self.bot.config["success_emojis"][True]} New disappearing message timer for {pronoun} channel: '
 				f'{human_timedelta(expiry)}.')
 			self.to_keep.add(m.id)
+
+	@commands.command(name='time-left')
+	async def time_left(self, ctx, message: MessageId):
+		channel, message_id = message
+		expires_at = await self.db.get_message_expiration(message_id)
+		if expires_at is None:
+			await ctx.send('That message will not disappear.')
+			return
+
+		delta = expires_at - datetime.datetime.utcnow()
+		await ctx.send(f'That message will expire in {human_timedelta(delta)}.')
 
 	@commands.Cog.listener()
 	async def on_message_expiration_timer_complete(self, timer):

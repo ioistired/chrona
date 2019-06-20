@@ -15,4 +15,4 @@ DO UPDATE SET expiry = EXCLUDED.expiry
 -- params: message_id
 SELECT expires
 FROM timers
-WHERE payload -> 'message_id' = $1
+WHERE payload -> 'kwargs' -> 'message_id' = $1
