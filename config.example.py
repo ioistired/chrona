@@ -17,4 +17,7 @@
 	},
 
 	'success_emojis': {False: '❌', True: '✅'},
+
+	# the contents of this file will be shown by the copyright command
+	'copyright_license_file': '',
 }
