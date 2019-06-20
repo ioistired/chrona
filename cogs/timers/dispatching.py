@@ -8,14 +8,13 @@ from discord.ext import commands
 from discord.ext import tasks
 
 from .db import Timer
-from utils.sql import connection, optional_connection, load_sql
-from utils.time import human_timedelta
+from utils.sql import connection
 
 # Using code provided by Rapptz under the MIT License
 # © 2015 Rapptz
 # https://raw.githubusercontent.com/Rapptz/RoboDanny/rewrite/cogs/reminder.py
 
-class TimerDatabase(commands.Cog):
+class TimerDispatcher(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 		self.db = bot.cogs['TimerDatabase']
@@ -23,23 +22,22 @@ class TimerDatabase(commands.Cog):
 		self._have_timer = asyncio.Event()
 		self._task = self.bot.loop.create_task(self._dispatch_timers())
 
-	# be careful not to use @optional_connection here, as that would potentially hold open connections for too long
 	async def _wait_for_active_timer(self):
-		timer = self._active_timer = await self.db.get_active_timer()
+		timer = await self.db.get_active_timer()
 		if timer is not None:
 			self._have_timer.set()
 			return timer
 
 		# no timers found in the DB
 		self._have_timer.clear()
+		self._current_timer = None
 		await self._have_timer.wait()
-		timer = self._active_timer = await self.db.get_active_timer()
-		return timer
+		return await self.db.get_active_timer()
 
 	async def _dispatch_timers(self):
 		try:
 			while not self.bot.is_closed():
-				timer = await self._wait_for_active_timer()
+				timer = self._current_timer = await self._wait_for_active_timer()
 				await timer.sleep_until_complete()
 				await self._handle_timer(timer)
 		except (OSError, discord.ConnectionClosed, asyncpg.PostgresConnectionError):
@@ -94,4 +92,4 @@ class TimerDatabase(commands.Cog):
 		self.bot.dispatch(f'{timer.event}_timer_complete', timer)
 
 def setup(bot):
-	bot.add_cog(TimerDatabase(bot))
+	bot.add_cog(TimerDispatcher(bot))

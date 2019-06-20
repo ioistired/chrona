@@ -1,13 +1,8 @@
 import datetime
 import re
 
-import inflect
-inflect = inflect.engine()
-import parsedatetime as pdt
-from dateutil.relativedelta import relativedelta
+from ben_cogs.misc import natural_time
 from discord.ext import commands
-
-from . import plural
 
 # Using code provided by Rapptz under the MIT License
 # © 2015 Rapptz
@@ -31,48 +26,5 @@ class ShortTime(commands.Converter):
 		data = {k: int(v) for k, v in match.groupdict(default=0).items()}
 		return datetime.timedelta(**data)
 
-def human_timedelta(dt, *, accuracy=3, brief=False, past=False):
-	suffix = ' ago' if past else ''
-
-	attrs = [
-		('year', 'y'),
-		('month', 'mo'),
-		('day', 'd'),
-		('hour', 'h'),
-		('minute', 'm'),
-		('second', 's'),
-	]
-
-	output = []
-	for attr, brief_attr in attrs:
-		elem = getattr(delta, attr + 's')
-		if not elem:
-			continue
-
-		if attr == 'day':
-			weeks = delta.weeks
-			if weeks:
-				elem -= weeks * 7
-				if not brief:
-					output.append(format(plural(weeks), 'week'))
-				else:
-					output.append(f'{weeks}w')
-
-		if elem <= 0:
-			continue
-
-		if brief:
-			output.append(f'{elem}{brief_attr}')
-		else:
-			output.append(format(plural(elem), attr))
-
-	if accuracy is not None:
-		output = output[:accuracy]
-
-	if len(output) == 0:
-		return 'now'
-	else:
-		if not brief:
-			return inflect.join(output, conj='and') + suffix
-		else:
-			return ' '.join(output) + suffix
+def human_timedelta(delta):
+	return natural_time(delta.total_seconds())
