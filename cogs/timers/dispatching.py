@@ -78,9 +78,6 @@ class TimerDatabase(commands.Cog):
 		now = datetime.datetime.utcnow()
 		timer = Timer(event=event, args=args, kwargs=kwargs, expires=when, created_at=now)
 		delta = (when - now).total_seconds()
-		if delta <= 60:
-			self.bot.loop.create_task(self._short_timer_optimization(timer))
-			return timer
 
 		timer.id = await self.db.create_timer(event, when, {'args': args, 'kwargs': kwargs})
 
@@ -92,10 +89,6 @@ class TimerDatabase(commands.Cog):
 			self.bot.loop.create_task(self._dispatch_timers())
 
 		return timer
-
-	async def _short_timer_optimization(self, timer):
-		await timer.sleep_until_complete()
-		self.dispatch_timer(timer)
 
 	def dispatch_timer(self, timer):
 		self.bot.dispatch(f'{timer.event}_timer_complete', timer)
