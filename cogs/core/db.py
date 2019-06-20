@@ -22,6 +22,10 @@ class DisappearingMessagesDatabase(commands.Cog):
 		await connection().execute(self.queries.set_expiry, channel.guild.id, channel.id, expiry)
 
 	@optional_connection
+	async def delete_expiry(self, channel: discord.TextChannel):
+		await connection().execute(self.queries.delete_expiry, channel.id)
+
+	@optional_connection
 	async def get_message_expiration(self, message_id) -> datetime.datetime:
 		return await connection().fetchval(self.queries.get_message_expiration, message_id)
 

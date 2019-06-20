@@ -74,6 +74,18 @@ class DisappearingMessages(commands.Cog):
 				f'{human_timedelta(expiry)}.')
 			self.to_keep.add(m.id)
 
+	@timer.command(name='delete')
+	async def delete_timer(self, ctx, channel: discord.TextChannel = None):
+		async with self.to_keep_lock:
+			self.to_keep.add(ctx.message.id)
+
+		channel = channel or ctx.channel
+		await self.db.delete_expiry(channel)
+		pronoun = 'this' if channel == ctx.channel else 'that'
+		async with self.to_keep_lock:
+			m = await ctx.send(f'Disabled disappearing messages for {pronoun} channel.')
+			self.to_keep.add(m.id)
+
 	@commands.command(name='time-left')
 	async def time_left(self, ctx, message: MessageId):
 		channel, message_id = message

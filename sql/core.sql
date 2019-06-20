@@ -11,6 +11,11 @@ VALUES ($1, $2, $3)
 ON CONFLICT (channel_id)
 DO UPDATE SET expiry = EXCLUDED.expiry
 
+-- :name delete_expiry
+-- params: channel_id
+DELETE FROM expiries
+WHERE channel_id = $1
+
 -- :name get_message_expiration
 -- params: message_id
 SELECT expires
