@@ -18,35 +18,31 @@ class TimerDispatcher(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 		self.db = bot.cogs['TimerDatabase']
-		self._current_timer = None
-		self._have_timer = asyncio.Event()
-		self._task = self.bot.loop.create_task(self._dispatch_timers())
-
-	async def _wait_for_active_timer(self):
-		timer = await self.db.get_active_timer()
-		if timer is not None:
-			self._have_timer.set()
-			return timer
-
-		# no timers found in the DB
-		self._have_timer.clear()
-		self._current_timer = None
-		await self._have_timer.wait()
-		return await self.db.get_active_timer()
+		self.current_timer = None
+		self.have_timer = asyncio.Event()
+		self.task = self.bot.loop.create_task(self._dispatch_timers())
 
 	async def _dispatch_timers(self):
 		try:
 			while not self.bot.is_closed():
-				timer = self._current_timer = await self._wait_for_active_timer()
+				timer = self.current_timer = await self._wait_for_active_timer()
 				await timer.sleep_until_complete()
 				await self._handle_timer(timer)
 		except (OSError, discord.ConnectionClosed, asyncpg.PostgresConnectionError):
-			self._task.cancel()
-			self._task = self.bot.loop.create_task(self._dispatch_timers())
+			self.task.cancel()
+			self.task = self.bot.loop.create_task(self._dispatch_timers())
 
-	async def _handle_timer(self, timer):
-		await self.db.delete_timer(timer)
-		self.dispatch_timer(timer)
+	async def _wait_for_active_timer(self):
+		timer = await self.db.get_active_timer()
+		if timer is not None:
+			self.have_timer.set()
+			return timer
+
+		# no timers found in the DB
+		self.have_timer.clear()
+		self.current_timer = None
+		await self.have_timer.wait()
+		return await self.db.get_active_timer()
 
 	async def create_timer(self, *args, **kwargs):
 		r"""Creates a timer.
@@ -79,14 +75,18 @@ class TimerDispatcher(commands.Cog):
 
 		timer.id = await self.db.create_timer(event, when, {'args': args, 'kwargs': kwargs})
 
-		self._have_timer.set()
+		self.have_timer.set()
 
-		if self._current_timer and timer.expires < self._current_timer.expires:
-			self._current_timer = timer
-			self._task.cancel()
+		if self.current_timer and timer.expires < self.current_timer.expires:
+			self.current_timer = timer
+			self.task.cancel()
 			self.bot.loop.create_task(self._dispatch_timers())
 
 		return timer
+
+	async def _handle_timer(self, timer):
+		await self.db.delete_timer(timer)
+		self.dispatch_timer(timer)
 
 	def dispatch_timer(self, timer):
 		self.bot.dispatch(f'{timer.event}_timer_complete', timer)
