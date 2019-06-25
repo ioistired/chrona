@@ -22,6 +22,9 @@ class TimerDispatcher(commands.Cog):
 		self.have_timer = asyncio.Event()
 		self.task = self.bot.loop.create_task(self._dispatch_timers())
 
+	def cog_unload(self):
+		self.task.cancel()
+
 	async def _dispatch_timers(self):
 		try:
 			while not self.bot.is_closed():
