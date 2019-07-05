@@ -59,31 +59,19 @@ class DisappearingMessages(commands.Cog):
 
 	@timer.command(name='set', usage='<time interval>')
 	async def set_timer(self, ctx, channel: typing.Optional[discord.TextChannel] = None, *, expiry: ShortTime):
-		# XXX i think this may not always preserve the invoking message
-		# as self.on_message may have gotten to it first
-		# however, in my experience, this does work
-		async with self.to_keep_lock:
-			self.to_keep.add(ctx.message.id)
-
 		channel = channel or ctx.channel
 		await self.db.set_expiry(channel, expiry)
-		pronoun = 'this' if channel == ctx.channel else 'that'
 		async with self.to_keep_lock:
-			m = await ctx.send(
-				f'{self.bot.config["success_emojis"][True]} New disappearing message timer for {pronoun} channel: '
-				f'{human_timedelta(expiry)}.')
+			m = await channel.send(
+				f'{ctx.author.mention} set the disappearing message timer to {human_timedelta(expiry)}')
 			self.to_keep.add(m.id)
 
 	@timer.command(name='delete')
 	async def delete_timer(self, ctx, channel: discord.TextChannel = None):
-		async with self.to_keep_lock:
-			self.to_keep.add(ctx.message.id)
-
 		channel = channel or ctx.channel
 		await self.db.delete_expiry(channel)
-		pronoun = 'this' if channel == ctx.channel else 'that'
 		async with self.to_keep_lock:
-			m = await ctx.send(f'Disabled disappearing messages for {pronoun} channel.')
+			m = await channel.send(f'{ctx.author.mention} disabled disappearing messages.')
 			self.to_keep.add(m.id)
 
 	@commands.command(name='time-left')
