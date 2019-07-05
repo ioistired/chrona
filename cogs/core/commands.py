@@ -61,6 +61,9 @@ class DisappearingMessages(commands.Cog):
 	async def set_timer(self, ctx, channel: typing.Optional[discord.TextChannel] = None, *, expiry: ShortTime):
 		channel = channel or ctx.channel
 		await self.db.set_expiry(channel, expiry)
+		# for consistency with already having a timer, also delete the invoking message
+		# even when no timer is set
+		self.bot.loop.create_task(self.on_message(ctx.message))
 		async with self.to_keep_lock:
 			m = await channel.send(
 				f'{ctx.author.mention} set the disappearing message timer to {human_timedelta(expiry)}.')
