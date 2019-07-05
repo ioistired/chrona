@@ -17,17 +17,18 @@ class DisappearingMessages(commands.Cog):
 		self.bot = bot
 		self.timers = bot.cogs['TimerDispatcher']
 		self.db = bot.cogs['DisappearingMessagesDatabase']
-		self.to_keep_lock = asyncio.Lock()
-		self.to_keep = set()
+		# TODO make these one LRU
+		self.to_keep_locks = collections.defaultdict(asyncio.Lock)
+		self.to_keep = collections.defaultdict(set)
 
 	@commands.Cog.listener()
 	async def on_message(self, message):
 		if not message.guild:
 			return
 
-		async with self.to_keep_lock:
-			if message.id in self.to_keep:
-				self.to_keep.remove(message.id)
+		async with self.to_keep_locks[message.channel.id]:
+			with contextlib.suppress(LookupError):
+				self.to_keep[message.channel.id].remove(message.id)
 				return
 
 		expiry = await self.db.get_expiry(message.channel)
@@ -64,18 +65,18 @@ class DisappearingMessages(commands.Cog):
 		# for consistency with already having a timer, also delete the invoking message
 		# even when no timer is set
 		self.bot.loop.create_task(self.on_message(ctx.message))
-		async with self.to_keep_lock:
+		async with self.to_keep_locks[channel.id]:
 			m = await channel.send(
 				f'{ctx.author.mention} set the disappearing message timer to {human_timedelta(expiry)}.')
-			self.to_keep.add(m.id)
+			self.to_keep[channel.id].add(m.id)
 
 	@timer.command(name='delete', aliases=['rm', 'remove', 'disable'])
 	async def delete_timer(self, ctx, channel: discord.TextChannel = None):
 		channel = channel or ctx.channel
 		await self.db.delete_expiry(channel)
-		async with self.to_keep_lock:
+		async with self.to_keep_locks[channel.id]:
 			m = await channel.send(f'{ctx.author.mention} disabled disappearing messages.')
-			self.to_keep.add(m.id)
+			self.to_keep[channel.id].add(m.id)
 
 	@commands.command(name='time-left')
 	async def time_left(self, ctx, message: MessageId):
