@@ -66,7 +66,7 @@ class DisappearingMessages(commands.Cog):
 				f'{ctx.author.mention} set the disappearing message timer to {human_timedelta(expiry)}.')
 			self.to_keep.add(m.id)
 
-	@timer.command(name='delete')
+	@timer.command(name='delete', aliases=['rm', 'remove', 'disable'])
 	async def delete_timer(self, ctx, channel: discord.TextChannel = None):
 		channel = channel or ctx.channel
 		await self.db.delete_expiry(channel)
