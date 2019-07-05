@@ -53,9 +53,9 @@ class DisappearingMessages(commands.Cog):
 		if expiry is None:
 			await ctx.send(f'This channel does not have disappearing messages set up.')
 		else:
-			pronoun = 'this' if channel == ctx.channel else 'that'
+			noun = 'this channel' if channel == ctx.channel else channel.mention
 			await ctx.send(
-				f'The current disappearing message timer for {pronoun} channel is {human_timedelta(expiry)}.')
+				f'The current disappearing message timer for {noun} channel is {human_timedelta(expiry)}.')
 
 	@timer.command(name='set', usage='<time interval>')
 	async def set_timer(self, ctx, channel: typing.Optional[discord.TextChannel] = None, *, expiry: ShortTime):
@@ -63,7 +63,7 @@ class DisappearingMessages(commands.Cog):
 		await self.db.set_expiry(channel, expiry)
 		async with self.to_keep_lock:
 			m = await channel.send(
-				f'{ctx.author.mention} set the disappearing message timer to {human_timedelta(expiry)}')
+				f'{ctx.author.mention} set the disappearing message timer to {human_timedelta(expiry)}.')
 			self.to_keep.add(m.id)
 
 	@timer.command(name='delete')
