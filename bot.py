@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import asyncpg
-from ben_cogs import BenCogsBot
+from ben_cogs.bot import BenCogsBot
 
 import utils
 
