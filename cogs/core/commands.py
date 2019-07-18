@@ -40,7 +40,8 @@ class DisappearingMessages(commands.Cog):
 			'message_expiration',
 			expires,
 			channel_id=message.channel.id,
-			message_id=message.id)
+			message_id=message.id,
+			created=message.created_at)
 
 	@commands.group(invoke_without_command=True)
 	@commands.has_permissions(manage_messages=True)

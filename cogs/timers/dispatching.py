@@ -61,6 +61,9 @@ class TimerDispatcher(commands.Cog):
 			Arguments to pass to the event
 		\*\*kwargs
 			Keyword arguments to pass to the event
+		created: datetime.datetime
+			Special keyword-only argument to use as the creation time.
+			Should make the timedeltas a bit more consistent.
 
 		Note
 		------
@@ -72,7 +75,11 @@ class TimerDispatcher(commands.Cog):
 		"""
 		event, when, *args = args
 
-		now = datetime.datetime.utcnow()
+		try:
+			now = kwargs.pop('created')
+		except KeyError:
+			now = datetime.datetime.utcnow()
+
 		timer = Timer(event=event, args=args, kwargs=kwargs, expires=when, created_at=now)
 		delta = (when - now).total_seconds()
 
