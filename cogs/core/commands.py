@@ -35,7 +35,7 @@ class DisappearingMessages(commands.Cog):
 		if expiry is None:
 			return
 
-		expires = datetime.datetime.utcnow() + expiry
+		expires = message.created_at + expiry
 		timer = await self.timers.create_timer(
 			'message_expiration',
 			expires,
