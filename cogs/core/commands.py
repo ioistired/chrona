@@ -40,6 +40,9 @@ class DisappearingMessages(commands.Cog):
 
 			await channel.delete_messages(to_purge)
 
+	def cog_unload(self):
+		self.handle_missed_task.cancel()
+
 	@commands.Cog.listener()
 	async def on_message(self, message):
 		if not message.guild:
