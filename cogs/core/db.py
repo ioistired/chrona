@@ -22,12 +22,26 @@ class DisappearingMessagesDatabase(commands.Cog):
 		await connection().execute(self.queries.set_expiry, channel.guild.id, channel.id, expiry)
 
 	@optional_connection
+	async def set_last_timer_change(self, channel: discord.TextChannel, message_id):
+		await connection().execute(self.queries.set_last_timer_change, channel.guild.id, channel.id, message_id)
+
+	@optional_connection
 	async def delete_expiry(self, channel: discord.TextChannel):
 		await connection().execute(self.queries.delete_expiry, channel.id)
 
 	@optional_connection
+	async def delete_last_timer_change(self, channel_id):
+		await connection().execute(self.queries.delete_last_timer_change, channel_id)
+
+	@optional_connection
 	async def get_message_expiration(self, message_id) -> datetime.datetime:
 		return await connection().fetchval(self.queries.get_message_expiration, message_id)
+
+	@optional_connection
+	async def latest_message_per_channel(self):
+		async with connection().transaction():
+			async for row in connection().cursor(self.queries.latest_message_per_channel):
+				yield row
 
 def setup(bot):
 	bot.add_cog(DisappearingMessagesDatabase(bot))
