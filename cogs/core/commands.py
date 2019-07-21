@@ -44,7 +44,6 @@ class DisappearingMessages(commands.Cog):
 			created=message.created_at)
 
 	@commands.group(invoke_without_command=True)
-	@commands.has_permissions(manage_messages=True)
 	async def timer(self, ctx, channel: discord.TextChannel = None):
 		"""Get the current disappearing message timer for this channel or another"""
 		if ctx.invoked_subcommand is not None:
@@ -62,6 +61,9 @@ class DisappearingMessages(commands.Cog):
 	@timer.command(name='set', usage='<time interval>')
 	async def set_timer(self, ctx, channel: typing.Optional[discord.TextChannel] = None, *, expiry: ShortTime):
 		channel = channel or ctx.channel
+		if not channel.permissions_for(ctx.author).manage_channels:
+			raise commands.MissingPermissions(['manage_channels'])
+
 		await self.db.set_expiry(channel, expiry)
 		# for consistency with already having a timer, also delete the invoking message
 		# even when no timer is set
@@ -74,6 +76,9 @@ class DisappearingMessages(commands.Cog):
 	@timer.command(name='delete', aliases=['rm', 'remove', 'disable'])
 	async def delete_timer(self, ctx, channel: discord.TextChannel = None):
 		channel = channel or ctx.channel
+		if not channel.permissions_for(ctx.author).manage_channels:
+			raise commands.MissingPermissions(['manage_channels'])
+
 		await self.db.delete_expiry(channel)
 		async with self.to_keep_locks[channel.id]:
 			m = await channel.send(f'{ctx.author.mention} disabled disappearing messages.')
