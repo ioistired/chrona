@@ -27,8 +27,6 @@ class DisappearingMessages(commands.Cog):
 
 	async def handle_missed(self):
 		await self.bot.wait_until_ready()
-		await asyncio.sleep(10)
-		print('handling missed')
 
 		cutoff = discord.utils.time_snowflake(self.started_at, high=True)
 		async for channel_id, message_id, expiry in self.db.latest_message_per_channel(cutoff):
@@ -38,7 +36,6 @@ class DisappearingMessages(commands.Cog):
 
 			to_purge = []
 			async for m in channel.history(after=discord.Object(message_id), limit=None):
-				print(m.content)
 				if m.created_at < datetime.datetime.utcnow() - expiry:
 					to_purge.append(m)
 				else:
