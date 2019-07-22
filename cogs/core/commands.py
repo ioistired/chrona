@@ -3,6 +3,7 @@ import collections
 import contextlib
 import datetime
 import os.path
+import time
 import typing
 
 import discord
@@ -14,6 +15,7 @@ from utils.time import human_timedelta, ShortTime
 
 class DisappearingMessages(commands.Cog):
 	def __init__(self, bot):
+		self.started_at = datetime.datetime.utcnow()
 		self.bot = bot
 		self.timers = bot.cogs['TimerDispatcher']
 		self.db = bot.cogs['DisappearingMessagesDatabase']
@@ -25,14 +27,18 @@ class DisappearingMessages(commands.Cog):
 
 	async def handle_missed(self):
 		await self.bot.wait_until_ready()
+		await asyncio.sleep(10)
+		print('handling missed')
 
-		async for channel_id, message_id, expiry in self.db.latest_message_per_channel():
+		cutoff = discord.utils.time_snowflake(self.started_at, high=True)
+		async for channel_id, message_id, expiry in self.db.latest_message_per_channel(cutoff):
 			channel = self.bot.get_channel(channel_id)
 			if not channel:
 				continue
 
 			to_purge = []
 			async for m in channel.history(after=discord.Object(message_id), limit=None):
+				print(m.content)
 				if m.created_at < datetime.datetime.utcnow() - expiry:
 					to_purge.append(m)
 				else:

@@ -38,9 +38,9 @@ class DisappearingMessagesDatabase(commands.Cog):
 		return await connection().fetchval(self.queries.get_message_expiration, message_id)
 
 	@optional_connection
-	async def latest_message_per_channel(self):
+	async def latest_message_per_channel(self, cutoff: int):
 		async with connection().transaction():
-			async for row in connection().cursor(self.queries.latest_message_per_channel):
+			async for row in connection().cursor(self.queries.latest_message_per_channel, cutoff):
 				yield row
 
 def setup(bot):
