@@ -18,30 +18,28 @@ class MessageId(Converter):
 
 	Author must be able to view the target channel.
 	"""
-
 	async def convert(self, ctx, argument):
 		match = MESSAGE_ID_RE.match(argument) or MESSAGE_LINK_RE.match(argument)
 		if not match:
-			raise errors.BadArgument("{} doesn't look like a message to me...".format(argument))
+			raise errors.BadArgument(f"{argument} doesn't look like a message to me…")
 
-		msg_id = int(match.group("message_id"))
-		channel_id = int(match.group("channel_id") or ctx.channel.id)
+		msg_id = int(match['message_id'])
+		channel_id = int(match['channel_id'] or ctx.channel.id)
 		channel = ctx.guild.get_channel(channel_id)
 		if not channel:
 			channel = ctx.bot.get_channel(channel_id)
 
 		if not channel:
-			raise errors.BadArgument("Channel {} not found".format(channel_id))
+			raise errors.BadArgument(f'Channel {channel_id} not found.')
 
 		author = channel.guild.get_member(ctx.author.id)
 
 		if not channel.guild.me.permissions_in(channel).read_messages:
-			raise errors.CheckFailure("I don't have permission to view channel {0.mention}".format(channel))
+			raise errors.CheckFailure(f"I don't have permission to view channel {channel.mention}.")
 		if not author or not channel.permissions_for(author).read_messages:
-			raise errors.CheckFailure("You don't have permission to view channel {0.mention}".format(channel))
+			raise errors.CheckFailure(f"You don't have permission to view channel {channel.mention}.")
 
 		return (channel, msg_id)
-
 
 class Message(Converter):
 	"""Match message_id, channel-message_id, or jump url to a discord.Message"""
@@ -53,9 +51,9 @@ class Message(Converter):
 			try:
 				msg = await channel.fetch_message(msg_id)
 			except discord.NotFound:
-				raise errors.BadArgument("Message {0} not found in channel {1.mention}".format(msg_id, channel))
+				raise errors.BadArgument(f'Message {msg_id} not found in channel {channel.mention}.')
 			except discord.Forbidden:
-				raise errors.CheckFailure("I don't have permission to view channel {0.mention}".format(channel))
+				raise errors.CheckFailure(f"I don't have permission to view channel {channel.mention}.")
 		elif msg.channel.id != channel.id:
-			raise errors.BadArgument("Message not found")
+			raise errors.BadArgument('Message not found.')
 		return msg
