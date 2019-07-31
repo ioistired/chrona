@@ -130,7 +130,7 @@ class DisappearingMessages(commands.Cog):
 		time_left = expires_at - datetime.datetime.utcnow()
 		expiry = expires_at - message.created_at
 		emoji = self.timer_emoji(time_left, expiry)
-		await ctx.send(f'{emoji} That message will expire in {human_timedelta(time_left)}.')
+		await ctx.send(f'{emoji} That message will disappear in {human_timedelta(time_left)}.')
 
 	@commands.Cog.listener()
 	async def on_message_expiration_timer_complete(self, timer):
