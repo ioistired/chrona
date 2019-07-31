@@ -10,7 +10,7 @@ import typing
 import discord
 from discord.ext import commands
 
-from utils.converter import MessageId
+from utils.converter import Message
 from utils.sql import connection, load_sql
 from utils.time import human_timedelta, ShortTime
 
@@ -121,15 +121,14 @@ class DisappearingMessages(commands.Cog):
 			self.to_keep[channel.id].add(m.id)
 
 	@commands.command(name='time-left')
-	async def time_left(self, ctx, message: MessageId):
-		channel, message_id = message
-		expires_at = await self.db.get_message_expiration(message_id)
+	async def time_left(self, ctx, message: Message):
+		expires_at = await self.db.get_message_expiration(message.id)
 		if expires_at is None:
 			await ctx.send('That message will not disappear.')
 			return
 
 		time_left = expires_at - datetime.datetime.utcnow()
-		expiry = expires_at - discord.utils.snowflake_time(message_id)
+		expiry = expires_at - message.created_at
 		emoji = self.timer_emoji(time_left, expiry)
 		await ctx.send(f'{emoji} That message will expire in {human_timedelta(time_left)}.')
 

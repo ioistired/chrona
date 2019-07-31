@@ -46,7 +46,7 @@ class MessageId(Converter):
 class Message(Converter):
 	"""Match message_id, channel-message_id, or jump url to a discord.Message"""
 	async def convert(self, ctx, argument):
-		channel, msg_id = await MessageIdConverter().convert(ctx, argument)
+		channel, msg_id = await MessageId().convert(ctx, argument)
 
 		msg = discord.utils.get(ctx.bot.cached_messages, id=msg_id)
 		if msg is None:
