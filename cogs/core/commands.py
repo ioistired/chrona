@@ -2,6 +2,7 @@ import asyncio
 import collections
 import contextlib
 import datetime
+import math
 import os.path
 import time
 import typing
@@ -127,14 +128,23 @@ class DisappearingMessages(commands.Cog):
 			await ctx.send('That message will not disappear.')
 			return
 
-		delta = expires_at - datetime.datetime.utcnow()
-		await ctx.send(f'That message will expire in {human_timedelta(delta)}.')
+		time_left = expires_at - datetime.datetime.utcnow()
+		expiry = expires_at - discord.utils.snowflake_time(message_id)
+		emoji = self.timer_emoji(time_left, expiry)
+		await ctx.send(f'{emoji} That message will expire in {human_timedelta(time_left)}.')
 
 	@commands.Cog.listener()
 	async def on_message_expiration_timer_complete(self, timer):
 		channel_id, message_id = map(timer.kwargs.get, ('channel_id', 'message_id'))
 		with contextlib.suppress(discord.HTTPException):
 			await self.bot.http.delete_message(channel_id, message_id)
+
+	def timer_emoji(self, time_left, expiry):
+		amt_full = max(0, min(1, time_left.total_seconds() / expiry.total_seconds()))
+		timer_emojis = self.bot.config['timer_emojis']
+		frame = math.ceil(amt_full * (len(timer_emojis) - 1))
+		frame = max(0, min(frame, len(timer_emojis) - 1))
+		return timer_emojis[frame]
 
 def setup(bot):
 	bot.add_cog(DisappearingMessages(bot))
