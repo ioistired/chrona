@@ -1,7 +1,7 @@
 import re
 
 import discord
-from discord.ext.commands import Converter, errors
+from discord.ext.commands import Converter, clean_content, errors
 
 # Using code provided by khazhyk under the MIT License
 # © 2017 khazhyk
@@ -21,7 +21,8 @@ class MessageId(Converter):
 	async def convert(self, ctx, argument):
 		match = MESSAGE_ID_RE.match(argument) or MESSAGE_LINK_RE.match(argument)
 		if not match:
-			raise errors.BadArgument(f"{argument} doesn't look like a message to me…")
+			cleaned = await clean_content().convert(ctx, f"{argument} doesn't look like a message to me…")
+			raise errors.BadArgument(cleaned)
 
 		msg_id = int(match['message_id'])
 		channel_id = int(match['channel_id'] or ctx.channel.id)
