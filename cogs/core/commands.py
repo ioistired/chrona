@@ -85,7 +85,7 @@ class DisappearingMessages(commands.Cog):
 		else:
 			noun = 'this channel' if channel == ctx.channel else channel.mention
 			await ctx.send(
-				f'The current disappearing message timer for {noun} channel is {human_timedelta(expiry)}.')
+				f'The current disappearing message timer for {noun} channel is **{human_timedelta(expiry)}**.')
 
 	@timer.command(name='set', usage='<time interval>')
 	async def set_timer(self, ctx, channel: typing.Optional[discord.TextChannel] = None, *, expiry: ShortTime):
@@ -103,7 +103,7 @@ class DisappearingMessages(commands.Cog):
 			emoji = self.bot.config['timer_change_emoji']
 			async with self.to_keep_locks[channel.id]:
 				m = await channel.send(
-					f'{emoji} {ctx.author.mention} set the disappearing message timer to {human_timedelta(expiry)}.')
+					f'{emoji} {ctx.author.mention} set the disappearing message timer to **{human_timedelta(expiry)}**.')
 				self.to_keep[channel.id].add(m.id)
 			await self.db.set_last_timer_change(channel, m.id)
 
@@ -137,7 +137,7 @@ class DisappearingMessages(commands.Cog):
 
 		emoji = self.timer_emoji(time_elapsed, expiry)
 
-		await ctx.send(f'{emoji} That message will disappear in {human_timedelta(time_left)}.')
+		await ctx.send(f'{emoji} That message will disappear in **{human_timedelta(time_left)}**.')
 
 	@commands.Cog.listener()
 	async def on_message_expiration_timer_complete(self, timer):
