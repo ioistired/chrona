@@ -21,7 +21,7 @@ class ShortTime(commands.Converter):
 	async def convert(cls, ctx, argument):
 		match = cls.compiled.fullmatch(argument)
 		if match is None or not match.group(0):
-			raise commands.BadArgument('invalid time provided')
+			raise commands.BadArgument('Invalid time provided.')
 
 		data = {k: int(v) for k, v in match.groupdict(default=0).items()}
 		return datetime.timedelta(**data)
