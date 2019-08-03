@@ -99,9 +99,11 @@ class DisappearingMessages(commands.Cog):
 			# for consistency with already having a timer, also delete the invoking message
 			# even when no timer is set
 			self.bot.loop.create_task(self.create_timer(ctx.message, expiry))
+
+			emoji = self.bot.config['timer_change_emoji']
 			async with self.to_keep_locks[channel.id]:
 				m = await channel.send(
-					f'{ctx.author.mention} set the disappearing message timer to {human_timedelta(expiry)}.')
+					f'{emoji} {ctx.author.mention} set the disappearing message timer to {human_timedelta(expiry)}.')
 				self.to_keep[channel.id].add(m.id)
 			await self.db.set_last_timer_change(channel, m.id)
 
@@ -117,7 +119,8 @@ class DisappearingMessages(commands.Cog):
 			await self.db.delete_last_timer_change(channel.id)
 
 		async with self.to_keep_locks[channel.id]:
-			m = await channel.send(f'{ctx.author.mention} disabled disappearing messages.')
+			emoji = self.bot.config['timer_disable_emoji']
+			m = await channel.send(f'{emoji} {ctx.author.mention} disabled disappearing messages.')
 			self.to_keep[channel.id].add(m.id)
 
 	@commands.command(name='time-left')
@@ -127,9 +130,13 @@ class DisappearingMessages(commands.Cog):
 			await ctx.send('That message will not disappear.')
 			return
 
-		time_left = expires_at - datetime.datetime.utcnow()
+		now = datetime.datetime.utcnow()
+		time_left = expires_at - now
+		time_elapsed = now - message.created_at
 		expiry = expires_at - message.created_at
+
 		emoji = self.timer_emoji(time_left, expiry)
+
 		await ctx.send(f'{emoji} That message will disappear in {human_timedelta(time_left)}.')
 
 	@commands.Cog.listener()
@@ -138,12 +145,12 @@ class DisappearingMessages(commands.Cog):
 		with contextlib.suppress(discord.HTTPException):
 			await self.bot.http.delete_message(channel_id, message_id)
 
-	def timer_emoji(self, time_left, expiry):
-		amt_full = max(0, min(1, time_left.total_seconds() / expiry.total_seconds()))
-		timer_emojis = self.bot.config['timer_emojis']
-		frame = math.ceil(amt_full * (len(timer_emojis) - 1))
-		frame = max(0, min(frame, len(timer_emojis) - 1))
-		return timer_emojis[frame]
+	def timer_emoji(self, time_elapsed, expiry):
+		elapsed_coeff = max(0, min(1, time_elapsed.total_seconds() / expiry.total_seconds()))
+		emojis = self.bot.config['timer_emojis']
+		max_i = len(emojis) - 1
+		i = max(0, min(max_i, math.ceil(elapsed_coeff * max_i)))
+		return emojis[i]
 
 def setup(bot):
 	bot.add_cog(DisappearingMessages(bot))
