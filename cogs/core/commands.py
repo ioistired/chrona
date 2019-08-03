@@ -135,7 +135,7 @@ class DisappearingMessages(commands.Cog):
 		time_elapsed = now - message.created_at
 		expiry = expires_at - message.created_at
 
-		emoji = self.timer_emoji(time_left, expiry)
+		emoji = self.timer_emoji(time_elapsed, expiry)
 
 		await ctx.send(f'{emoji} That message will disappear in {human_timedelta(time_left)}.')
 
