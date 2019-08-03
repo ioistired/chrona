@@ -148,8 +148,8 @@ class DisappearingMessages(commands.Cog):
 	def timer_emoji(self, time_elapsed, expiry):
 		elapsed_coeff = max(0, min(1, time_elapsed.total_seconds() / expiry.total_seconds()))
 		emojis = self.bot.config['timer_emojis']
-		max_i = len(emojis) - 1
-		i = max(0, min(max_i, math.ceil(elapsed_coeff * max_i)))
+		# err on the side of more time left, allowing a new message to show the first emoji
+		i = max(0, min(len(emojis) - 1, math.floor(elapsed_coeff * len(emojis))))
 		return emojis[i]
 
 def setup(bot):
