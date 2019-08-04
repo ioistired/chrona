@@ -123,7 +123,7 @@ class DisappearingMessages(commands.Cog):
 			m = await channel.send(f'{emoji} {ctx.author.mention} disabled disappearing messages.')
 			self.to_keep[channel.id].add(m.id)
 
-	@commands.command(name='time-left')
+	@commands.command(name='time-left', aliases=['when'])
 	async def time_left(self, ctx, message: Message):
 		expires_at = await self.db.get_message_expiration(message.id)
 		if expires_at is None:
