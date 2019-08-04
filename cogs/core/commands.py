@@ -81,7 +81,8 @@ class DisappearingMessages(commands.Cog):
 		channel = channel or ctx.channel
 		expiry = await self.db.get_expiry(channel)
 		if expiry is None:
-			await ctx.send(f'This channel does not have disappearing messages set up.')
+			emoji = self.bot.config['timer_disable_emoji']
+			await ctx.send(f'{emoji} This channel does not have disappearing messages set up.')
 		else:
 			noun = 'this channel' if channel == ctx.channel else channel.mention
 			await ctx.send(
