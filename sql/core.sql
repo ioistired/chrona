@@ -24,7 +24,7 @@ WHERE (payload -> 'kwargs' -> 'message_id')::bigint = $1
 
 -- :name latest_message_per_channel
 -- params: cutoff_time (upper bound)
-SELECT channel_id, coalesce(max_per_channel.message_id, last_timer_changes.message_id), expiry
+SELECT channel_id, coalesce_max(max_per_channel.message_id, last_timer_changes.message_id), expiry
 FROM (
 	SELECT
 		(payload -> 'kwargs' -> 'channel_id')::bigint AS channel_id,
@@ -33,7 +33,7 @@ FROM (
 	WHERE (payload -> 'kwargs' -> 'message_id')::bigint < $1
 	GROUP BY channel_id) AS max_per_channel
 	FULL OUTER JOIN last_timer_changes USING (channel_id)
-	INNER JOIN expiries USING (channel_id);
+	INNER JOIN expiries USING (channel_id)
 
 -- :name set_last_timer_change
 -- params: guild_id, channel_id, message_id
