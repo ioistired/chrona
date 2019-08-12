@@ -127,11 +127,11 @@ class DisappearingMessages(commands.Cog):
 	@commands.command(name='time-left', aliases=['when'])
 	async def time_left(self, ctx, message: Message):
 		# this technically may not work--it's still a race condition
-		async with self.to_keep_locks[ctx.channel.id]:
-			self.to_keep[ctx.channel.id].add(ctx.message.id)
+		self.to_keep[ctx.channel.id].add(ctx.message.id)
 
 		expires_at = await self.db.get_message_expiration(message.id)
 		if expires_at is None:
+			self.to_keep[ctx.channel.id].discard(ctx.message.id)
 			await ctx.send('That message will not disappear.')
 			return
 
