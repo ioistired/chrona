@@ -126,12 +126,8 @@ class DisappearingMessages(commands.Cog):
 
 	@commands.command(name='time-left', aliases=['when'])
 	async def time_left(self, ctx, message: Message):
-		# this technically may not work--it's still a race condition
-		self.to_keep[ctx.channel.id].add(ctx.message.id)
-
 		expires_at = await self.db.get_message_expiration(message.id)
 		if expires_at is None:
-			self.to_keep[ctx.channel.id].discard(ctx.message.id)
 			await ctx.send('That message will not disappear.')
 			return
 
@@ -142,9 +138,9 @@ class DisappearingMessages(commands.Cog):
 
 		emoji = self.timer_emoji(time_elapsed, expiry)
 
+		await self.create_timer(ctx.message, time_left)
 		async with self.to_keep_locks[ctx.channel.id]:
 			# time left messages disappear when the message does
-			await self.create_timer(ctx.message, time_left)
 			m = await ctx.send(f'{emoji} That message will disappear in **{human_timedelta(time_left)}**.')
 			self.to_keep[ctx.channel.id].add(m.id)
 			await self.create_timer(m, time_left)

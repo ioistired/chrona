@@ -55,6 +55,8 @@ LIMIT 1
 -- :name create_timer
 INSERT INTO timers (guild_id, channel_id, message_id, expires)
 VALUES ($1, $2, $3, $4)
+ON CONFLICT (channel_id, message_id) DO UPDATE
+SET expires = EXCLUDED.expires
 
 -- :name delete_timer
 -- params: channel_id, message_id
