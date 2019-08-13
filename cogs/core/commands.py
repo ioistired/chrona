@@ -18,7 +18,6 @@ class DisappearingMessages(commands.Cog):
 	def __init__(self, bot):
 		self.started_at = datetime.datetime.utcnow()
 		self.bot = bot
-		self.timers = bot.cogs['TimerDispatcher']
 		self.db = bot.cogs['DisappearingMessagesDatabase']
 		# TODO make these one LRU
 		self.to_keep_locks = collections.defaultdict(asyncio.Lock)
@@ -64,13 +63,11 @@ class DisappearingMessages(commands.Cog):
 		await self.create_timer(message, expiry)
 
 	async def create_timer(self, message, expiry):
-		expires = message.created_at + expiry
-		await self.timers.create_timer(
-			'message_expiration',
-			expires,
+		await self.db.create_timer(
+			guild_id=message.guild.id,
 			channel_id=message.channel.id,
 			message_id=message.id,
-			created=message.created_at)
+			when=message.created_at + expiry)
 
 	@commands.group(invoke_without_command=True)
 	async def timer(self, ctx, channel: discord.TextChannel = None):
@@ -94,12 +91,15 @@ class DisappearingMessages(commands.Cog):
 		if not channel.permissions_for(ctx.author).manage_channels:
 			raise commands.MissingPermissions(['manage_channels'])
 
+		# for consistency with already having a timer, also delete the invoking message
+		# even when no timer is set
+		async with self.to_keep_locks[channel.id]:
+			self.to_keep[channel.id].add(ctx.message.id)
+			await self.create_timer(ctx.message, expiry)
+
 		async with self.bot.pool.acquire() as conn, conn.transaction():
 			connection.set(conn)
 			await self.db.set_expiry(channel, expiry)
-			# for consistency with already having a timer, also delete the invoking message
-			# even when no timer is set
-			self.bot.loop.create_task(self.create_timer(ctx.message, expiry))
 
 			emoji = self.bot.config['timer_change_emoji']
 			async with self.to_keep_locks[channel.id]:
@@ -150,10 +150,9 @@ class DisappearingMessages(commands.Cog):
 			await self.create_timer(m, time_left)
 
 	@commands.Cog.listener()
-	async def on_message_expiration_timer_complete(self, timer):
-		channel_id, message_id = map(timer.kwargs.get, ('channel_id', 'message_id'))
+	async def on_message_expiration(self, timer):
 		with contextlib.suppress(discord.HTTPException):
-			await self.bot.http.delete_message(channel_id, message_id)
+			await self.bot.http.delete_message(timer.channel_id, timer.message_id)
 
 	def timer_emoji(self, time_elapsed, expiry):
 		elapsed_coeff = max(0, min(1, time_elapsed.total_seconds() / expiry.total_seconds()))
