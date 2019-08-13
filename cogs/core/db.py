@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import logging
 import os.path
 
 import asyncpg
@@ -8,6 +9,8 @@ from discord.ext import commands
 
 from utils import sleep
 from utils.sql import connection, optional_connection, load_sql
+
+logger = logging.getLogger(__name__)
 
 # Using code provided by Rapptz under the MIT License
 # © 2015 Rapptz
@@ -67,10 +70,15 @@ class DisappearingMessagesDatabase(commands.Cog):
 	async def _dispatch_timers(self):
 		try:
 			while not self.bot.is_closed():
-				timer = self.current_timer = await self._wait_for_active_timer()
+				# for some reason this is necessary, even with @optional_connection
+				async with self.bot.pool.acquire() as conn:
+					connection.set(conn)
+					timer = self.current_timer = await self._wait_for_active_timer()
+
 				await timer.sleep_until_complete()
 				await self._handle_timer(timer)
-		except (OSError, discord.ConnectionClosed, asyncpg.PostgresConnectionError):
+		except (OSError, discord.ConnectionClosed, asyncpg.PostgresConnectionError, asyncpg.InterfaceError) as exc:
+			logger.warning('Timer dispatching restarting due to %r', exc)
 			self.task.cancel()
 			self.task = self.bot.loop.create_task(self._dispatch_timers())
 
@@ -90,15 +98,21 @@ class DisappearingMessagesDatabase(commands.Cog):
 		await self.delete_timer(timer)
 		self.bot.dispatch('message_expiration', timer)
 
+	async def create_timer(self, message, expiry):
+		return await self._create_timer(self.queries.create_timer, message, expiry)
+
+	async def create_or_update_timer(self, message, expiry):
+		"""create a timer. if one already exists for this message, and the new expiration is sooner than the old
+		expiration, update the existing timer.
+		"""
+		return await self._create_timer(self.queries.create_timer.replace('-- :block upsert ', ''), message, expiry)
+
 	@optional_connection
-	async def create_timer(self, *, guild_id, channel_id, message_id, when, created=None):
-		now = created or datetime.datetime.utcnow()
+	async def _create_timer(self, query, message, expiry):
+		expires = message.created_at + expiry
+		timer = Timer(guild_id=message.guild.id, channel_id=message.channel.id, message_id=message.id, expires=expires)
 
-		timer = Timer(guild_id=guild_id, channel_id=channel_id, message_id=message_id, expires=when)
-		delta = (when - now).total_seconds()
-
-		await connection().execute(self.queries.create_timer, guild_id, channel_id, message_id, when)
-
+		await connection().execute(query, message.guild.id, message.channel.id, message.id, expires)
 		self.have_timer.set()
 
 		if self.current_timer and timer.expires < self.current_timer.expires:

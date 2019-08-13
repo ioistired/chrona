@@ -39,7 +39,7 @@ FROM (
 INSERT INTO last_timer_changes (guild_id, channel_id, message_id)
 VALUES ($1, $2, $3)
 ON CONFLICT (channel_id) DO UPDATE
-SET message_id = EXCLUDED.message_id
+	SET message_id = EXCLUDED.message_id
 
 -- :name delete_last_timer_change
 -- params: channel_id
@@ -55,8 +55,9 @@ LIMIT 1
 -- :name create_timer
 INSERT INTO timers (guild_id, channel_id, message_id, expires)
 VALUES ($1, $2, $3, $4)
-ON CONFLICT (channel_id, message_id) DO UPDATE
-SET expires = EXCLUDED.expires
+-- :block upsert ON CONFLICT (channel_id, message_id) DO UPDATE
+-- :block upsert SET expires = EXCLUDED.expires
+-- :block upsert WHERE EXCLUDED.expires < timers.expires
 
 -- :name delete_timer
 -- params: channel_id, message_id

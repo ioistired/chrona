@@ -39,7 +39,7 @@ class DisappearingMessages(commands.Cog):
 				if m.created_at < datetime.datetime.utcnow() - expiry:
 					to_purge.append(m)
 				else:
-					await self.create_timer(m, expiry)
+					await self.db.create_timer(m, expiry)
 
 			await channel.delete_messages(to_purge)
 
@@ -60,14 +60,7 @@ class DisappearingMessages(commands.Cog):
 		if expiry is None:
 			return
 
-		await self.create_timer(message, expiry)
-
-	async def create_timer(self, message, expiry):
-		await self.db.create_timer(
-			guild_id=message.guild.id,
-			channel_id=message.channel.id,
-			message_id=message.id,
-			when=message.created_at + expiry)
+		await self.db.create_timer(message, expiry)
 
 	@commands.group(invoke_without_command=True)
 	async def timer(self, ctx, channel: discord.TextChannel = None):
@@ -95,7 +88,7 @@ class DisappearingMessages(commands.Cog):
 		# even when no timer is set
 		async with self.to_keep_locks[channel.id]:
 			self.to_keep[channel.id].add(ctx.message.id)
-			await self.create_timer(ctx.message, expiry)
+			await self.db.create_timer(ctx.message, expiry)
 
 		async with self.bot.pool.acquire() as conn, conn.transaction():
 			connection.set(conn)
@@ -138,12 +131,12 @@ class DisappearingMessages(commands.Cog):
 
 		emoji = self.timer_emoji(time_elapsed, expiry)
 
-		await self.create_timer(ctx.message, time_left)
+		await self.db.create_or_update_timer(ctx.message, time_left)
 		async with self.to_keep_locks[ctx.channel.id]:
 			# time left messages disappear when the message does
 			m = await ctx.send(f'{emoji} That message will disappear in **{human_timedelta(time_left)}**.')
 			self.to_keep[ctx.channel.id].add(m.id)
-			await self.create_timer(m, time_left)
+			await self.db.create_timer(m, time_left)
 
 	@commands.Cog.listener()
 	async def on_message_expiration(self, timer):
