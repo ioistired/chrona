@@ -5,6 +5,7 @@ import os.path
 
 import asyncpg
 import discord
+from ben_cogs.misc import natural_timedelta
 from discord.ext import commands
 
 from utils import sleep
@@ -34,7 +35,7 @@ class Timer:
 
 	@property
 	def human_delta(self):
-		return human_timedelta(self.created_at)
+		return natural_timedelta(self.created_at)
 
 	def __repr__(self):
 		return '<{} {}>'.format(

@@ -8,11 +8,12 @@ import time
 import typing
 
 import discord
+from ben_cogs.misc import absolute_natural_timedelta, natural_timedelta
 from discord.ext import commands
 
 from utils.converter import Message
 from utils.sql import connection, load_sql
-from utils.time import human_timedelta, ShortTime
+from utils.time import ShortTime
 
 class DisappearingMessages(commands.Cog):
 	def __init__(self, bot):
@@ -76,7 +77,8 @@ class DisappearingMessages(commands.Cog):
 		else:
 			noun = 'this channel' if channel == ctx.channel else channel.mention
 			await ctx.send(
-				f'The current disappearing message timer for {noun} channel is **{human_timedelta(expiry)}**.')
+				f'The current disappearing message timer for {noun} channel is '
+				f'**{absolute_natural_timedelta(expiry.total_seconds())}**.')
 
 	@timer.command(name='set', usage='<time interval>')
 	async def set_timer(self, ctx, channel: typing.Optional[discord.TextChannel] = None, *, expiry: ShortTime):
@@ -97,7 +99,8 @@ class DisappearingMessages(commands.Cog):
 			emoji = self.bot.config['timer_change_emoji']
 			async with self.to_keep_locks[channel.id]:
 				m = await channel.send(
-					f'{emoji} {ctx.author.mention} set the disappearing message timer to **{human_timedelta(expiry)}**.')
+					f'{emoji} {ctx.author.mention} set the disappearing message timer to '
+					f'**{absolute_natural_timedelta(expiry.total_seconds())}**.')
 				self.to_keep[channel.id].add(m.id)
 			await self.db.set_last_timer_change(channel, m.id)
 
@@ -134,7 +137,7 @@ class DisappearingMessages(commands.Cog):
 		await self.db.create_or_update_timer(ctx.message, time_left)
 		async with self.to_keep_locks[ctx.channel.id]:
 			# time left messages disappear when the message does
-			m = await ctx.send(f'{emoji} That message will disappear in **{human_timedelta(time_left)}**.')
+			m = await ctx.send(f'{emoji} That message will disappear in **{natural_timedelta(expires_at)}**.')
 			self.to_keep[ctx.channel.id].add(m.id)
 			await self.db.create_timer(m, time_left)
 

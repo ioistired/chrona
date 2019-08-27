@@ -1,7 +1,6 @@
 import datetime
 import re
 
-from ben_cogs.misc import natural_time
 from discord.ext import commands
 
 # Using code provided by Rapptz under the MIT License
@@ -25,6 +24,3 @@ class ShortTime(commands.Converter):
 
 		data = {k: int(v) for k, v in match.groupdict(default=0).items()}
 		return datetime.timedelta(**data)
-
-def human_timedelta(delta, *, accuracy=2):
-	return natural_time(delta.total_seconds(), accuracy=accuracy)
