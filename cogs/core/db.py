@@ -144,13 +144,7 @@ class DisappearingMessagesDatabase(commands.Cog):
 
 	@optional_connection
 	async def set_last_timer_change(self, channel: discord.TextChannel, message_id):
-		async with self.bot.pool.acquire() as conn, conn.transaction():
-			connection.set(conn)
-			# simulated foreign key
-			# since we only want to check validity on insert to last_timer_changes, not deletion from expiries
-			if await self.get_expiry(channel) is None:
-				raise ValueError('that channel does not have a timer set')
-			await connection().execute(self.queries.set_last_timer_change, channel.guild.id, channel.id, message_id)
+		await connection().execute(self.queries.set_last_timer_change, channel.guild.id, channel.id, message_id)
 
 	@optional_connection
 	async def delete_expiry(self, channel: discord.TextChannel):
