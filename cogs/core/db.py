@@ -9,7 +9,7 @@ from ben_cogs.misc import natural_timedelta
 from discord.ext import commands
 
 from utils import sleep
-from utils.sql import connection, optional_connection, load_sql
+from utils.sql import connection, optional_connection
 
 logger = logging.getLogger(__name__)
 
@@ -55,10 +55,7 @@ class Timer:
 class DisappearingMessagesDatabase(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
-
-		with open(os.path.join('sql', 'queries.sql')) as f:
-			self.queries = load_sql(f)
-
+		self.queries = self.bot.jinja_env.get_template('queries.sql')
 		self.current_timer = None
 		self.have_timer = asyncio.Event()
 		self.task = self.bot.loop.create_task(self._dispatch_timers())
@@ -100,13 +97,13 @@ class DisappearingMessagesDatabase(commands.Cog):
 		self.bot.dispatch('message_expiration', timer)
 
 	async def create_timer(self, message, expiry):
-		return await self._create_timer(self.queries.create_timer, message, expiry)
+		return await self._create_timer(self.queries.create_timer(), message, expiry)
 
 	async def create_or_update_timer(self, message, expiry):
 		"""create a timer. if one already exists for this message, and the new expiration is sooner than the old
 		expiration, update the existing timer.
 		"""
-		return await self._create_timer(self.queries.create_timer.replace('-- :block upsert ', ''), message, expiry)
+		return await self._create_timer(self.queries.create_timer('upsert'), message, expiry)
 
 	@optional_connection
 	async def _create_timer(self, query, message, expiry):
@@ -127,41 +124,41 @@ class DisappearingMessagesDatabase(commands.Cog):
 
 	@optional_connection
 	async def delete_timer(self, timer):
-		await connection().execute(self.queries.delete_timer, timer.channel_id, timer.message_id)
+		await connection().execute(self.queries.delete_timer(), timer.channel_id, timer.message_id)
 
 	@optional_connection
 	async def get_active_timer(self):
-		record = await connection().fetchrow(self.queries.get_active_timer)
+		record = await connection().fetchrow(self.queries.get_active_timer())
 		return record and Timer(**record)
 
 	@optional_connection
 	async def get_expiry(self, channel: discord.TextChannel):
-		return await connection().fetchval(self.queries.get_expiry, channel.id)
+		return await connection().fetchval(self.queries.get_expiry(), channel.id)
 
 	@optional_connection
 	async def set_expiry(self, channel: discord.TextChannel, expiry: datetime.timedelta):
-		await connection().execute(self.queries.set_expiry, channel.guild.id, channel.id, expiry)
+		await connection().execute(self.queries.set_expiry(), channel.guild.id, channel.id, expiry)
 
 	@optional_connection
 	async def set_last_timer_change(self, channel: discord.TextChannel, message_id):
-		await connection().execute(self.queries.set_last_timer_change, channel.guild.id, channel.id, message_id)
+		await connection().execute(self.queries.set_last_timer_change(), channel.guild.id, channel.id, message_id)
 
 	@optional_connection
 	async def delete_expiry(self, channel: discord.TextChannel):
-		await connection().execute(self.queries.delete_expiry, channel.id)
+		await connection().execute(self.queries.delete_expiry(), channel.id)
 
 	@optional_connection
 	async def delete_last_timer_change(self, channel_id):
-		await connection().execute(self.queries.delete_last_timer_change, channel_id)
+		await connection().execute(self.queries.delete_last_timer_change(), channel_id)
 
 	@optional_connection
 	async def get_message_expiration(self, message_id) -> datetime.datetime:
-		return await connection().fetchval(self.queries.get_message_expiration, message_id)
+		return await connection().fetchval(self.queries.get_message_expiration(), message_id)
 
 	@optional_connection
 	async def latest_message_per_channel(self, cutoff: int):
 		async with connection().transaction():
-			async for row in connection().cursor(self.queries.latest_message_per_channel, cutoff):
+			async for row in connection().cursor(self.queries.latest_message_per_channel(), cutoff):
 				yield row
 
 def setup(bot):

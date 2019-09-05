@@ -12,8 +12,8 @@ from ben_cogs.misc import absolute_natural_timedelta, natural_timedelta
 from discord.ext import commands
 
 from utils.converter import Message
-from utils.sql import connection, load_sql
 from utils.time import ShortTime
+from utils.sql import connection
 
 class DisappearingMessages(commands.Cog):
 	def __init__(self, bot):

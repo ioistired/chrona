@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import asyncpg
+import querypp
 from ben_cogs.bot import BenCogsBot
 
 import utils
@@ -8,6 +9,7 @@ import utils
 class Chrona(BenCogsBot):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs, setup_db=True)
+		self.jinja_env = querypp.QueryEnvironment('sql')
 
 	startup_extensions = (
 		'cogs.core.db',

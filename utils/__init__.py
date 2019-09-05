@@ -11,11 +11,6 @@ async def asyncpg_set_json_codec(conn):
 		decoder=json.loads,
 		format='text')
 
-attrdict = type('attrdict', (dict,), {
-	'__getattr__': dict.__getitem__,
-	'__setattr__': dict.__setitem__,
-	'__delattr__': dict.__delitem__})
-
 # Using code provided by Rapptz under the MIT License
 # © 2015 Rapptz
 # https://github.com/Rapptz/RoboDanny/blob/6fd16002e0cbd3ed68bf5a8db10d61658b0b9d51/cogs/utils/formats.py
