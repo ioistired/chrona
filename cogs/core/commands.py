@@ -8,7 +8,7 @@ import time
 import typing
 
 import discord
-from ben_cogs.misc import absolute_natural_timedelta, natural_timedelta
+from bot_bin.misc import absolute_natural_timedelta, natural_timedelta
 from discord.ext import commands
 
 from utils.converter import Message

@@ -5,7 +5,7 @@ import os.path
 
 import asyncpg
 import discord
-from ben_cogs.misc import natural_timedelta
+from bot_bin.misc import natural_timedelta
 from discord.ext import commands
 
 from utils import sleep

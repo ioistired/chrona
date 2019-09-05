@@ -2,11 +2,11 @@
 
 import asyncpg
 import querypp
-from ben_cogs.bot import BenCogsBot
+from bot_bin.bot import Bot
 
 import utils
 
-class Chrona(BenCogsBot):
+class Chrona(Bot):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs, setup_db=True)
 		self.jinja_env = querypp.QueryEnvironment('sql')
@@ -15,10 +15,10 @@ class Chrona(BenCogsBot):
 		'cogs.core.db',
 		'cogs.core.commands',
 		'jishaku',
-		'ben_cogs.misc',
-		'ben_cogs.debug',
-		'ben_cogs.stats',
-		'ben_cogs.sql',
+		'bot_bin.misc',
+		'bot_bin.debug',
+		'bot_bin.stats',
+		'bot_bin.sql',
 		'cogs.meta',
 	)
 
