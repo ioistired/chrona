@@ -124,7 +124,7 @@ class DisappearingMessages(commands.Cog):
 	async def time_left(self, ctx, message: Message):
 		expires_at = await self.db.get_message_expiration(message.id)
 		if expires_at is None:
-			await ctx.send('That message will not disappear.')
+			await ctx.send(f'{self.bot.config["timer_disable_emoji"]} That message will not disappear.')
 			return
 
 		now = datetime.datetime.utcnow()
