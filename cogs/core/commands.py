@@ -9,11 +9,11 @@ import typing
 
 import discord
 from bot_bin.misc import absolute_natural_timedelta, natural_timedelta
+from bot_bin.sql import connection
 from discord.ext import commands
 
 from utils.converter import Message
 from utils.time import ShortTime
-from utils.sql import connection
 
 class DisappearingMessages(commands.Cog):
 	def __init__(self, bot):

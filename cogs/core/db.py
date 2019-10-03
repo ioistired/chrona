@@ -6,10 +6,10 @@ import os.path
 import asyncpg
 import discord
 from bot_bin.misc import natural_timedelta
+from bot_bin.sql import connection, optional_connection
 from discord.ext import commands
 
 from utils import sleep
-from utils.sql import connection, optional_connection
 
 logger = logging.getLogger(__name__)
 

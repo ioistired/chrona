@@ -22,10 +22,6 @@ class Chrona(Bot):
 		'cogs.meta',
 	)
 
-	async def init_db(self):
-		credentials = self.config['database']
-		self.pool = await asyncpg.create_pool(**credentials, init=utils.asyncpg_set_json_codec)
-
 if __name__ == '__main__':
 	with open('config.py') as f:
 		config = eval(f.read(), {})
