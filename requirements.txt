@@ -1,3 +1,4 @@
 bot_bin[sql]>=1.1.0,<2.0.0
 discord.py>=1.2.3,<2.0.0
+jinja2
 jishaku>=1.14.0,<2.0.0

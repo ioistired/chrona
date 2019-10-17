@@ -55,7 +55,7 @@ class Timer:
 class DisappearingMessagesDatabase(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
-		self.queries = self.bot.jinja_env.get_template('queries.sql')
+		self.queries = self.bot.queries('queries.sql')
 		self.current_timer = None
 		self.have_timer = asyncio.Event()
 		self.task = self.bot.loop.create_task(self._dispatch_timers())
