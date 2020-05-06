@@ -80,8 +80,14 @@ class DisappearingMessages(commands.Cog):
 				f'The current disappearing message timer for {noun} channel is '
 				f'**{absolute_natural_timedelta(expiry.total_seconds())}**.')
 
-	@timer.command(name='set', usage='<time interval>')
+	@timer.command(name='set', usage='[channel] <time interval>')
 	async def set_timer(self, ctx, channel: typing.Optional[discord.TextChannel] = None, *, expiry: ShortTime):
+		"""Set the disappearing messages timer for the given channel or the current one.
+
+		Messages sent in that channel will be deleted after the given amount of time.
+		You must have the Manage Channels permission on that channel in order to set the disappearing messages
+		timer.
+		"""
 		channel = channel or ctx.channel
 		if not channel.permissions_for(ctx.author).manage_channels:
 			raise commands.MissingPermissions(['manage_channels'])
@@ -106,6 +112,12 @@ class DisappearingMessages(commands.Cog):
 
 	@timer.command(name='delete', aliases=['rm', 'del', 'delet', 'remove', 'disable'])
 	async def delete_timer(self, ctx, channel: discord.TextChannel = None):
+		"""Delete the disappearing messages timer for the given channel or the current one.
+
+		Messages sent in that channel will no longer be deleted.
+		You must have the Manage Channels permission on that channel in order to delete the disappearing messages
+		timer.
+		"""
 		channel = channel or ctx.channel
 		if not channel.permissions_for(ctx.author).manage_channels:
 			raise commands.MissingPermissions(['manage_channels'])
