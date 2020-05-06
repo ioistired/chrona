@@ -110,7 +110,7 @@ class DisappearingMessages(commands.Cog):
 				self.to_keep[channel.id].add(m.id)
 			await self.db.set_last_timer_change(channel, m.id)
 
-	@timer.command(name='delete', aliases=['rm', 'del', 'delet', 'remove', 'disable'])
+	@timer.command(name='delete', aliases=['rm', 'del', 'remove', 'disable'])
 	async def delete_timer(self, ctx, channel: discord.TextChannel = None):
 		"""Delete the disappearing messages timer for the given channel or the current one.
 
