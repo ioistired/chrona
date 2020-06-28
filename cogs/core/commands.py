@@ -35,7 +35,7 @@ class DisappearingMessages(commands.Cog):
 		self.started_at = datetime.datetime.utcnow()
 		self.bot = bot
 		self.db = bot.cogs['DisappearingMessagesDatabase']
-		# TODO make these one LRU
+		# XXX use a queue or an overriden client.on_message instead of this dumb racy hack
 		self.to_keep_locks = collections.defaultdict(asyncio.Lock)
 		self.to_keep = collections.defaultdict(set)
 
