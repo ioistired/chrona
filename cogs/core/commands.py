@@ -70,6 +70,7 @@ class DisappearingMessages(commands.Cog):
 		async with self.to_keep_locks[message.channel.id]:
 			with contextlib.suppress(LookupError):
 				self.to_keep[message.channel.id].remove(message.id)
+				# we wanted to keep the message. it has now been kept.
 				return
 
 		expiry = await self.db.get_expiry(message.channel)
